@@ -1,0 +1,57 @@
+ # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+
+# Parameters
+nc: 3  # number of classes
+depth_multiple: 1.00  # model depth multiple
+width_multiple: 1.00  # layer channel multiple
+anchors: 3  # AutoAnchor evolves 3 anchors per P output layer
+
+# YOLOv5 v6.0 backbone
+backbone:
+  # [from, number, module, args]
+  [[-1, 1, ConvBNLayer, [32, 4, 4, 0, 1, False, "GELU"]],  # 0-P2/4
+   [-1, 1, ConvBNLayer, [64, 2, 2, 0, 1, False, "GELU"]],  # 1-P3/8
+   [-1, 1, MconvNetBlock, []],          # 2
+   [-1, 1, ConvBNLayer, [128, 2, 2, 0, 1, False, "GELU"]],  # 3-P4/16
+   [-1, 2, MconvNetBlock, []],          # 4
+   [-1, 1, ConvBNLayer, [256, 2, 2, 0, 1, False, "GELU"]],  # 5-P5/32
+   [-1, 8, MconvNetBlock, []],          # 6
+   [-1, 1, ConvBNLayer, [384, 2, 2, 0, 1, False, "GELU"]],  # 7-P6/64
+   [-1, 6, MconvNetBlock, [384]],          # 8
+   [-1, 1, ConvBNLayer, [512, 2, 2, 0, 1, False, "GELU"]],  # 9-P7/128
+   [-1, 2, MconvNetBlock, []],         # 10
+   [-1, 1, SPPF, [512, 5]],  # 11
+  ]
+
+# YOLOv5 v6.0 head with (P3, P4, P5, P6) outputs
+head:
+  [[-1, 1, Conv, [384, 1, 1]],    # 12
+   [-1, 1, CARAFE, [3, 5]],    # 13
+   [-1, 1, EVCBlock, [384]],    # 14
+   [[-1, 8], 1, Concat, [1]],  # cat backbone P6   14+1
+   [-1, 1, C3, [384, False]],  # 15+1
+
+   [-1, 1, Conv, [256, 1, 1]],    # 16+1
+   [-1, 1, CARAFE, [3, 5]],   # 17+1
+   [[-1, 6], 1, Concat, [1]],  # cat backbone P5   20-1
+   [-1, 1, C3, [256, False]],  # 21-1
+
+   [-1, 1, Conv, [128, 1, 1]],   # 20+2-1
+   [-1, 1, CARAFE, [3, 5]],    # 21+2-1
+   [[-1, 4], 1, Concat, [1]],  # cat backbone P4   22+3-2
+   [-1, 1, C3, [128, False]],  # 23+3-2 (P4/16-small)
+
+   [-1, 1, Conv, [128, 3, 2]],   # 24+3-2
+   [[-1, 21], 1, Concat, [1]],  # cat head P3  25+3-2
+   [-1, 1, C3, [128, False]],  # 26+3-2 (P5/32-medium)
+
+   [-1, 1, Conv, [256, 3, 2]],   #  27+3-2
+   [[-1, 17], 1, Concat, [1]],  # cat head P6   28+3-2
+   [-1, 1, C3, [384, False]],  # 29+3-2 (P6/64-large)
+
+   [-1, 1, Conv, [384, 3, 2]],    # 30+3-2
+   [[-1, 12], 1, Concat, [1]],  # cat head P7   # 31+3-2
+   [-1, 1, C3, [516, False]],  # 32+3-2 (P7/128-xlarge)
+
+   [[24, 27, 30, 33], 1, Detect, [nc, anchors]],  # Detect(P4, P5, P6, P7)
+  ]

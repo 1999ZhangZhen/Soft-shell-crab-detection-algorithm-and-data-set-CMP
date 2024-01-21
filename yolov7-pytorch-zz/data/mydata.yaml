@@ -1,0 +1,15 @@
+# COCO 2017 dataset http://cocodataset.org
+
+# download command/URL (optional)
+download: bash ./scripts/get_coco.sh
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ../yolov5-6.1_crab_cell_Auto/mydata/images/train/  # 118287 images
+val: ../yolov5-6.1_crab_cell_Auto/mydata/images/val/  # 5000 images
+#test: ./coco/test-dev2017.txt  # 20288 of 40670 images, submit to https://competitions.codalab.org/competitions/20794
+
+# number of classes
+nc: 3
+
+# class names
+names: ['shedding_crab', 'end_unshell', 'crab']
